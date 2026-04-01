@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STOW_PACKAGES=(zsh git config)
+STOW_PACKAGES=(zsh git config scripts)
 
 info()  { printf "\033[0;34m[info]\033[0m  %s\n" "$*"; }
 ok()    { printf "\033[0;32m[ok]\033[0m    %s\n" "$*"; }
@@ -40,6 +40,11 @@ backup_dotfiles() {
   backup_if_exists "$HOME/.config/starship.toml"
   backup_if_exists "$HOME/.config/ghostty/config"
   backup_if_exists "$HOME/.config/mise/config.toml"
+  # scripts dir — only back up if it's a real directory, not a symlink
+  if [[ -d "$HOME/scripts" && ! -L "$HOME/scripts" ]]; then
+    warn "Backing up $HOME/scripts → $HOME/scripts.bak.$(date +%Y%m%d_%H%M%S)"
+    mv "$HOME/scripts" "$HOME/scripts.bak.$(date +%Y%m%d_%H%M%S)"
+  fi
 }
 
 # ──────────────────────────────────────────────

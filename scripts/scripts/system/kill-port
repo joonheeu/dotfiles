@@ -1,0 +1,124 @@
+#!/usr/bin/env zsh
+
+# =========================================================
+# kill-port — kill process by port(s)
+# =========================================================
+
+set -e
+
+# default options
+auto_confirm=false
+force=false
+signal="TERM"
+
+usage() {
+  echo "Usage: kill-port [-y] [-f] [-s SIGNAL] <port> [port2 ...]"
+  echo "       kill-port [-y] [-f] <start-end>"
+  echo ""
+  echo "Options:"
+  echo "  -y            kill without confirmation"
+  echo "  -f            force kill (SIGKILL)"
+  echo "  -s SIGNAL     custom signal (default: TERM)"
+  echo ""
+  echo "Examples:"
+  echo "  kill-port 3000"
+  echo "  kill-port -y 3000"
+  echo "  kill-port 3000 3005"
+  echo "  kill-port 3000-3005"
+  echo "  kill-port -f 3000"
+  echo "  kill-port -s INT 3000"
+}
+
+# no args
+(( $# == 0 )) && { usage; exit 1 }
+
+# parse options
+args=()
+while (( $# > 0 )); do
+  case "$1" in
+    -y) auto_confirm=true ;;
+    -f) force=true ;;
+    -s)
+      shift
+      signal="$1"
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      args+=("$1")
+      ;;
+  esac
+  shift
+done
+
+(( ${#args[@]} == 0 )) && { echo "No ports specified"; exit 1 }
+
+# expand ports
+ports=()
+
+for port_arg in "${args[@]}"; do
+  if [[ "$port_arg" =~ ^([0-9]+)-([0-9]+)$ ]]; then
+    start=${match[1]}
+    end=${match[2]}
+
+    (( start > end )) && { echo "Invalid range: $start > $end"; exit 1; }
+
+    for (( p = start; p <= end; p++ )); do
+      ports+=($p)
+    done
+  elif [[ "$port_arg" =~ ^[0-9]+$ ]]; then
+    ports+=($port_arg)
+  else
+    echo "Invalid port: $port_arg"
+    exit 1
+  fi
+done
+
+# unique ports
+ports=(${(u)ports})
+
+# collect pids
+all_pids=()
+found_ports=()
+
+for port in "${ports[@]}"; do
+  pids=(${(@f)"$(lsof -ti tcp:$port 2>/dev/null)"})
+
+  if (( ${#pids[@]} > 0 )); then
+    found_ports+=($port)
+    all_pids+=($pids)
+  fi
+done
+
+# unique pids
+all_pids=(${(u)all_pids})
+
+if (( ${#all_pids[@]} == 0 )); then
+  echo "No process found on ports: ${ports[*]}"
+  exit 0
+fi
+
+# preview
+echo "Ports: ${found_ports[*]}"
+echo "PIDs : ${all_pids[*]}"
+
+# confirm
+if [[ "$auto_confirm" == false ]]; then
+  echo -n "Kill these processes? [y/N] "
+  read -k 1 response
+  echo
+  [[ ! "$response" =~ ^[Yy]$ ]] && { echo "Cancelled"; exit 0; }
+fi
+
+# decide signal
+if [[ "$force" == true ]]; then
+  signal="KILL"
+fi
+
+# kill
+echo "Sending SIG${signal}..."
+kill -s "$signal" "${all_pids[@]}" 2>/dev/null || true
+
+echo "Done."

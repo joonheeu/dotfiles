@@ -11,6 +11,11 @@ Personal development environment configuration, managed with [GNU Stow](https://
 | `config` | `.config/starship.toml` | Starship prompt theme |
 | | `.config/ghostty/config` | Ghostty terminal (Dracula theme, JetBrains Mono) |
 | | `.config/mise/config.toml` | mise runtime versions (Node, Python, Bun, etc.) |
+| `scripts` | `scripts/claude/` | Claude Code helper scripts (master agent, vibe-coder) |
+| | `scripts/dev/` | Editor extension cleaner |
+| | `scripts/mac/` | macOS storage cleanup, dictation fix |
+| | `scripts/security/` | Keychain-based secret manager, password generator |
+| | `scripts/system/` | Daily/weekly/monthly cleanup, kill-port |
 
 ## Install
 
@@ -35,10 +40,15 @@ The script will:
 ├── config/
 │   └── .config/
 │       ├── starship.toml
-│       ├── ghostty/
-│       │   └── config
-│       └── mise/
-│           └── config.toml
+│       ├── ghostty/config
+│       └── mise/config.toml
+├── scripts/
+│   └── scripts/
+│       ├── claude/
+│       ├── dev/
+│       ├── mac/
+│       ├── security/
+│       └── system/
 └── install.sh
 ```
 
