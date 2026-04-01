@@ -1,0 +1,13 @@
+font-family = JetBrains Mono
+font-size = 14
+
+# Theme (or use individual colors below)
+theme = Dracula
+
+# Custom colors
+background = #1e1e2e
+foreground = #cdd6f4
+cursor-color = #f5e0dc
+cursor-text = #1e1e2e
+selection-background = #585b70
+selection-foreground = #cdd6f4

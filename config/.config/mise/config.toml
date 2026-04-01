@@ -1,0 +1,13 @@
+[tools]
+bun = "latest"
+cargo = "latest"
+gh = "latest"
+node = "22"
+pnpm = "10.20.0"
+python = "3.11"
+redis = "latest"
+uv = "latest"
+yarn = "latest"
+
+[settings]
+idiomatic_version_file_enable_tools = ["python"]
