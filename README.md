@@ -42,13 +42,12 @@ The script will:
 │       ├── starship.toml
 │       ├── ghostty/config
 │       └── mise/config.toml
-├── scripts/
-│   └── scripts/
-│       ├── claude/
-│       ├── dev/
-│       ├── mac/
-│       ├── security/
-│       └── system/
+├── scripts/               ← ~/scripts 직접 심링크
+│   ├── claude/
+│   ├── dev/
+│   ├── mac/
+│   ├── security/
+│   └── system/
 └── install.sh
 ```
 

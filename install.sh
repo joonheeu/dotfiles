@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STOW_PACKAGES=(zsh git config scripts)
+STOW_PACKAGES=(zsh git config)
 
 info()  { printf "\033[0;34m[info]\033[0m  %s\n" "$*"; }
 ok()    { printf "\033[0;32m[ok]\033[0m    %s\n" "$*"; }
@@ -40,11 +40,6 @@ backup_dotfiles() {
   backup_if_exists "$HOME/.config/starship.toml"
   backup_if_exists "$HOME/.config/ghostty/config"
   backup_if_exists "$HOME/.config/mise/config.toml"
-  # scripts dir — only back up if it's a real directory, not a symlink
-  if [[ -d "$HOME/scripts" && ! -L "$HOME/scripts" ]]; then
-    warn "Backing up $HOME/scripts → $HOME/scripts.bak.$(date +%Y%m%d_%H%M%S)"
-    mv "$HOME/scripts" "$HOME/scripts.bak.$(date +%Y%m%d_%H%M%S)"
-  fi
 }
 
 # ──────────────────────────────────────────────
@@ -66,11 +61,21 @@ stow_packages() {
 # ──────────────────────────────────────────────
 # Main
 # ──────────────────────────────────────────────
+link_scripts() {
+  if [[ -d "$HOME/scripts" && ! -L "$HOME/scripts" ]]; then
+    warn "Backing up $HOME/scripts → $HOME/scripts.bak.$(date +%Y%m%d_%H%M%S)"
+    mv "$HOME/scripts" "$HOME/scripts.bak.$(date +%Y%m%d_%H%M%S)"
+  fi
+  ln -sf "$DOTFILES_DIR/scripts" "$HOME/scripts"
+  ok "scripts linked"
+}
+
 main() {
   info "Starting dotfiles install from: $DOTFILES_DIR"
   require_stow
   backup_dotfiles
   stow_packages
+  link_scripts
   ok "All done! Restart your shell or run: source ~/.zshrc"
 }
 
