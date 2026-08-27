@@ -13,6 +13,7 @@
 ├── dev/        # 개발 도구 (에디터, 빌드, 코드 보조)
 ├── security/   # 보안/인증 (비밀번호, 시크릿, 키체인)
 ├── claude/     # Claude/AI 관련 (skills, 에이전트 보조)
+├── ai/         # AI 도구 공통 유틸리티
 └── AGENTS.md   # 이 파일
 ```
 
@@ -29,6 +30,7 @@
 | `dev/` | 에디터·IDE 도구, 개발 환경 보조 | `editor-clean-extension` |
 | `security/` | 비밀번호 생성, 환경변수 시크릿, 키체인 | `genpass`, `secret_env.sh` |
 | `claude/` | Claude Code 보조, skills 관리, AI 자동화 | `skills-check.sh` |
+| `ai/` | 특정 에이전트에 종속되지 않는 AI CLI 유틸리티 | `codex-imagegen` |
 
 새 카테고리가 필요한 경우: 기존 4개 중 어디에도 속하지 않을 때만 폴더를 신설하고, 이 문서의 표를 업데이트하세요.
 

@@ -11,7 +11,8 @@ Personal development environment configuration, managed with [GNU Stow](https://
 | `config` | `.config/starship.toml` | Starship prompt theme |
 | | `.config/ghostty/config` | Ghostty terminal (Dracula theme, JetBrains Mono) |
 | | `.config/mise/config.toml` | mise runtime versions (Node, Python, Bun, etc.) |
-| `scripts` | `scripts/claude/` | Claude Code helper scripts (master agent, vibe-coder) |
+| `scripts` | `scripts/ai/` | AI CLI utilities (`codex-imagegen`) |
+| | `scripts/claude/` | Claude Code helper scripts (master agent, vibe-coder) |
 | | `scripts/dev/` | Editor extension cleaner |
 | | `scripts/mac/` | macOS storage cleanup, dictation fix |
 | | `scripts/security/` | Keychain-based secret manager, password generator |
