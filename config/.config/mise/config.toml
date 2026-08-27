@@ -1,9 +1,10 @@
 [tools]
 bun = "latest"
-cargo = "latest"
+rust = "latest"
 gh = "latest"
-node = "22"
-pnpm = "10.20.0"
+java = "zulu-javafx-17"
+node = "24"
+pnpm = "11.7.0"
 python = "3.11"
 redis = "latest"
 uv = "latest"
