@@ -2,12 +2,19 @@
 
 Personal development environment configuration, managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
+Automation policy, inventory, and follow-up checks are documented in
+[`AUTOMATIONS.md`](AUTOMATIONS.md). Run `~/scripts/system/home-automation-status`
+after installing or changing the home environment.
+
 ## Contents
 
 | Package | Files | Description |
 |---------|-------|-------------|
 | `zsh` | `.zshrc`, `.zprofile`, `.zsh-environment.md` | zsh shell — OMZ git, Zinit suggestions/highlighting, Starship |
+| `home` | `AGENTS.md` | Home-folder routing instructions for agents and automation work |
 | `git` | `.gitconfig` | Git user settings, LFS, HTTP buffer |
+| | `.gitconfig.delta` | Portable Delta pager and interactive diff settings |
+| | `.gitconfig.local.example` | Optional local GitHub CLI credential-helper template (not a secret) |
 | `config` | `.config/starship.toml` | Starship prompt theme |
 | | `.config/ghostty/config` | Ghostty terminal (Dracula theme, JetBrains Mono) |
 | | `.config/mise/config.toml` | mise runtime versions (Node, Python, Bun, etc.) |
