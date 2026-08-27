@@ -36,6 +36,7 @@ backup_if_exists() {
 backup_dotfiles() {
   info "Checking for existing dotfiles to back up..."
   backup_if_exists "$HOME/.zshrc"
+  backup_if_exists "$HOME/.zprofile"
   backup_if_exists "$HOME/.gitconfig"
   backup_if_exists "$HOME/.config/starship.toml"
   backup_if_exists "$HOME/.config/ghostty/config"

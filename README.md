@@ -6,7 +6,7 @@ Personal development environment configuration, managed with [GNU Stow](https://
 
 | Package | Files | Description |
 |---------|-------|-------------|
-| `zsh` | `.zshrc` | Shell config — Oh My Zsh, Zinit plugins, aliases, functions |
+| `zsh` | `.zshrc`, `.zprofile`, `.zsh-environment.md` | zsh shell — OMZ git, Zinit suggestions/highlighting, Starship |
 | `git` | `.gitconfig` | Git user settings, LFS, HTTP buffer |
 | `config` | `.config/starship.toml` | Starship prompt theme |
 | | `.config/ghostty/config` | Ghostty terminal (Dracula theme, JetBrains Mono) |
@@ -35,6 +35,8 @@ The script will:
 ```
 ~/.dotfiles/
 ├── zsh/
+│   ├── .zsh-environment.md
+│   ├── .zprofile
 │   └── .zshrc
 ├── git/
 │   └── .gitconfig
