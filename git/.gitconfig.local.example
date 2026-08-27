@@ -1,0 +1,8 @@
+# Copy this file to ~/.gitconfig.local when GitHub CLI credential integration is needed.
+# It intentionally contains no token or machine-specific executable path.
+[credential "https://github.com"]
+	helper =
+	helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+	helper =
+	helper = !gh auth git-credential

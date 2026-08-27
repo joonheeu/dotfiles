@@ -1,8 +1,57 @@
-add_newline = true
+# Developer-information prompt, kept portable across macOS and Ubuntu.
+add_newline = false
+command_timeout = 1000
+format = """
+$directory\
+$git_branch\
+$git_status\
+$nodejs\
+$python\
+$rust\
+$package\
+$cmd_duration\
+$line_break\
+$character"""
 
 [character]
-success_symbol = "[➜](green)"
-error_symbol = "[✗](red)"
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[directory]
+style = "bold cyan"
+truncation_length = 3
+truncate_to_repo = false
 
 [git_branch]
-symbol = "🌱 "
+format = " [$symbol$branch]($style)"
+symbol = "git:"
+style = "bold purple"
+
+[git_status]
+format = "([$all_status$ahead_behind]($style))"
+style = "bold yellow"
+
+[nodejs]
+format = " [node:$version]($style)"
+symbol = "node:"
+style = "bold green"
+
+[python]
+format = " [py:$version]($style)"
+symbol = "py:"
+style = "bold yellow"
+
+[rust]
+format = " [rust:$version]($style)"
+symbol = "rust:"
+style = "bold red"
+
+[package]
+format = " [$symbol$version]($style)"
+symbol = "pkg:"
+style = "bold blue"
+
+[cmd_duration]
+min_time = 1000
+format = " [took $duration]($style)"
+style = "bold yellow"
