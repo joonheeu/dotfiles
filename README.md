@@ -82,6 +82,33 @@ git commit -m "chore(zsh): update aliases"
 git push
 ```
 
+## Maintenance
+
+`dotfiles-prune` removes only regenerable dotfiles artifacts. It is a dry run
+by default; review the output, then apply it explicitly.
+
+```bash
+dotfiles-prune
+dotfiles-prune --apply
+```
+
+To run the safe default cleanup automatically at 03:20 on the first day of
+each month, register its macOS LaunchAgent once:
+
+```bash
+dotfiles-prune --install-schedule
+```
+
+It deletes root-level `.*.bak.*` files older than 30 days (and keeps at most
+the newest five), `~/.zcompdump*` files older than seven days (including empty
+stale lock directories), and stale
+`.DS_Store` files inside this repository. Finder creates `.DS_Store` files to
+remember each folder's view preferences, so home-wide cleanup is opt-in:
+
+```bash
+dotfiles-prune --home-ds-store --apply
+```
+
 ## Requirements
 
 - macOS (Apple Silicon)
