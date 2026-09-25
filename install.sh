@@ -4,7 +4,7 @@
 set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-STOW_PACKAGES=(zsh git config)
+STOW_PACKAGES=(zsh git config home)
 
 info()  { printf "\033[0;34m[info]\033[0m  %s\n" "$*"; }
 ok()    { printf "\033[0;32m[ok]\033[0m    %s\n" "$*"; }
@@ -36,7 +36,11 @@ backup_if_exists() {
 backup_dotfiles() {
   info "Checking for existing dotfiles to back up..."
   backup_if_exists "$HOME/.zshrc"
+  backup_if_exists "$HOME/.zprofile"
+  backup_if_exists "$HOME/AGENTS.md"
   backup_if_exists "$HOME/.gitconfig"
+  backup_if_exists "$HOME/.gitconfig.delta"
+  backup_if_exists "$HOME/.gitconfig.local.example"
   backup_if_exists "$HOME/.config/starship.toml"
   backup_if_exists "$HOME/.config/ghostty/config"
   backup_if_exists "$HOME/.config/mise/config.toml"

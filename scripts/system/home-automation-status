@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# home-automation-status — read-only health check for managed home automations.
+
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: home-automation-status
+
+Reports the dotfiles source, home symlinks, required commands, Git state, and
+the registration state of the safe dotfiles-prune LaunchAgent. This command
+does not modify files or register scheduled jobs.
+EOF
+}
+
+case "${1:-}" in
+  "") ;;
+  -h|--help) usage; exit 0 ;;
+  *) printf 'Unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+esac
+
+dotfiles_dir="${DOTFILES_DIR:-$HOME/.dotfiles}"
+printf 'Dotfiles source: %s\n' "$dotfiles_dir"
+
+check_link() {
+  local path="$1"
+  if [[ -L "$path" ]]; then
+    printf 'linked   %s -> %s\n' "$path" "$(readlink "$path")"
+  elif [[ -e "$path" ]]; then
+    printf 'unlinked %s (regular file)\n' "$path"
+  else
+    printf 'missing  %s\n' "$path"
+  fi
+}
+
+printf '\nManaged links\n'
+check_link "$HOME/AGENTS.md"
+check_link "$HOME/.zshrc"
+check_link "$HOME/.zprofile"
+check_link "$HOME/.zsh-environment.md"
+check_link "$HOME/scripts"
+
+printf '\nRequired commands\n'
+for command_name in zsh stow starship zoxide eza rg; do
+  if command -v "$command_name" >/dev/null 2>&1; then
+    printf 'available %s\n' "$command_name"
+  else
+    printf 'missing   %s\n' "$command_name"
+  fi
+done
+
+printf '\nScheduled automation\n'
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  label="com.joonheeu.dotfiles-prune"
+  if launchctl print "gui/$(id -u)/$label" >/dev/null 2>&1; then
+    printf 'registered %s\n' "$label"
+  else
+    printf 'not registered %s\n' "$label"
+  fi
+else
+  printf 'macOS LaunchAgent check skipped on %s\n' "$(uname -s)"
+fi
+
+printf '\nRepository\n'
+if command -v git >/dev/null 2>&1 && [[ -d "$dotfiles_dir/.git" ]]; then
+  git -C "$dotfiles_dir" status --short --branch
+else
+  printf 'Git repository not available\n'
+fi
+
+printf '\nNext actions\n'
+printf '%s\n' '- Read ~/.dotfiles/AUTOMATIONS.md before adding or scheduling an automation.'
+printf '%s\n' '- Review dotfiles-prune with no arguments; use --apply only after reviewing its output.'

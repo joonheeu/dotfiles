@@ -1,0 +1,5 @@
+# Portable Delta configuration. This file is included by ~/.gitconfig.
+[core]
+	pager = delta
+[interactive]
+	diffFilter = delta --color-only

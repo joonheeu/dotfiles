@@ -9,10 +9,12 @@
 
 ```
 ~/scripts/
-├── mac/        # macOS 시스템 관리 (정리, 설정, 하드웨어 제어)
+├── mac/        # macOS 시스템 관리 (설정, 하드웨어 제어)
 ├── dev/        # 개발 도구 (에디터, 빌드, 코드 보조)
 ├── security/   # 보안/인증 (비밀번호, 시크릿, 키체인)
 ├── claude/     # Claude/AI 관련 (skills, 에이전트 보조)
+├── ai/         # AI 도구 공통 유틸리티
+├── system/     # 상태 점검, 제한된 정리, 포트 관리
 └── AGENTS.md   # 이 파일
 ```
 
@@ -25,10 +27,12 @@
 
 | 폴더 | 포함 기준 | 예시 |
 |------|-----------|------|
-| `mac/` | macOS 전용 기능, 시스템 설정, 스토리지 관리 | `cleanup_mac_storage.sh`, `enable_dictation.sh` |
+| `mac/` | macOS 전용 기능, 시스템 설정, 하드웨어 제어 | `enable_dictation.sh` |
 | `dev/` | 에디터·IDE 도구, 개발 환경 보조 | `editor-clean-extension` |
 | `security/` | 비밀번호 생성, 환경변수 시크릿, 키체인 | `genpass`, `secret_env.sh` |
 | `claude/` | Claude Code 보조, skills 관리, AI 자동화 | `skills-check.sh` |
+| `ai/` | 특정 에이전트에 종속되지 않는 AI CLI 유틸리티 | `codex-imagegen` |
+| `system/` | 상태 점검, 제한된 시스템 정리, 포트 관리 | `home-automation-status`, `dotfiles-prune`, `kill-port` |
 
 새 카테고리가 필요한 경우: 기존 4개 중 어디에도 속하지 않을 때만 폴더를 신설하고, 이 문서의 표를 업데이트하세요.
 
@@ -88,32 +92,19 @@ chmod +x ~/scripts/<category>/<script-name>
 
 ---
 
-## PATH 및 미들웨어 동작 방식
+## 실행 방식
 
-`~/.zshrc`에 다음 두 가지 메커니즘이 적용되어 있습니다.
+현재 `~/scripts` 자체만 심볼릭 링크로 관리하며, 하위 폴더는 자동으로 PATH에 넣지
+않습니다. 이름 충돌을 피하기 위해 스크립트는 전체 경로로 실행합니다.
 
-### 1. 서브디렉토리 자동 PATH 등록
 ```zsh
-for _scripts_dir in "$HOME/scripts"/*/; do
-  PATH="$_scripts_dir:$PATH"
-done
+~/scripts/system/home-automation-status
+~/scripts/ai/codex-imagegen --help
 ```
-→ 새 폴더를 추가하면 `.zshrc` 수정 없이 자동으로 PATH에 포함됩니다.
 
-### 2. command_not_found_handler
-```zsh
-command_not_found_handler() {
-  # <cmd>.sh 파일을 모든 서브디렉토리에서 탐색하여 실행
-}
-```
-→ `skills-check` 입력 시 `claude/skills-check.sh`를 자동으로 찾아 실행합니다.
-
-### 3. `s` 미들웨어 함수
-```zsh
-s                      # 전체 목록 카테고리별 출력
-s genpass              # 이름으로 검색 후 실행
-s security genpass     # 카테고리 지정 실행
-```
+매일 쓰는 명령에만 검토 후 짧은 alias를 `.zshrc`에 추가할 수 있습니다. 예전의
+서브디렉터리 PATH 자동 등록·`command_not_found_handler`·`s` 미들웨어는 현재 구성에
+없으므로, 이를 전제로 스크립트를 추가하지 않습니다.
 
 ---
 
@@ -122,9 +113,11 @@ s security genpass     # 카테고리 지정 실행
 1. **카테고리 결정** — 위 표에서 적합한 폴더 선택
 2. **파일 생성** — 올바른 shebang 포함
 3. **실행 권한** — `chmod +x` 적용 (직접 실행 파일인 경우)
-4. **`.zshrc` 수정 불필요** — PATH 자동 등록 및 `command_not_found_handler`로 커버됨
-5. **alias 필요 시** — `~/.zshrc`의 alias 섹션에 `~/scripts/<cat>/<name>` 경로로 추가
-6. **이 문서 업데이트** — 카테고리가 바뀌거나 신규 폴더 생성 시
+4. **안전한 기본값** — 상태 점검 또는 `--dry-run`을 먼저 만들고, 변경은 `--apply`·확인으로 분리
+5. **검증** — 문법 검사와 가장 작은 읽기 전용 또는 dry-run 검증을 실행
+6. **등록** — `~/.dotfiles/AUTOMATIONS.md`에 목적·등급·예약 상태·후속 조치를 기록
+7. **alias 필요 시** — 검토 후 `~/.zshrc`의 alias 섹션에 `~/scripts/<cat>/<name>` 경로로 추가
+8. **이 문서 업데이트** — 카테고리가 바뀌거나 신규 폴더 생성 시
 
 ---
 
@@ -133,3 +126,5 @@ s security genpass     # 카테고리 지정 실행
 - `~/scripts/` 루트에 직접 스크립트 파일 생성 금지 (서브디렉토리 사용)
 - 시크릿·API 키를 스크립트 내에 하드코딩 금지 → `secret_env.sh` 또는 환경변수 사용
 - 프로덕션 시스템에 직접 영향을 주는 스크립트는 `--dry-run` 옵션 포함 권장
+- `cleanup-*.sh` 같은 광범위한 삭제 스크립트를 자동 등록하거나 실행하지 않음 →
+  `~/.dotfiles/AUTOMATIONS.md`의 레거시 보류 기준을 먼저 충족

@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# Prune regenerable dotfiles artifacts. Defaults to a dry run.
+
+set -euo pipefail
+
+APPLY=false
+HOME_DS_STORE=false
+INSTALL_SCHEDULE=false
+BACKUP_DAYS=30
+BACKUP_KEEP=5
+ZCOMPDUMP_DAYS=7
+
+usage() {
+  cat <<'EOF'
+Usage: dotfiles-prune [--apply] [--home-ds-store] [--install-schedule]
+
+Removes only regenerable dotfiles artifacts:
+  - ~/.<name>.bak.* files older than 30 days, retaining at most the newest 5
+  - ~/.zcompdump* files older than 7 days, plus empty stale lock directories
+  - .DS_Store files in ~/.dotfiles older than 7 days
+
+Options:
+  --apply          Delete the files shown by the dry run.
+  --home-ds-store  Also include stale .DS_Store files below $HOME, excluding
+                    Library, .Trash, and .ssh. This is opt-in because Finder
+                    uses .DS_Store to remember per-folder view settings.
+  --install-schedule  Register a macOS LaunchAgent to run --apply monthly.
+  -h, --help       Show this help.
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --apply) APPLY=true ;;
+    --home-ds-store) HOME_DS_STORE=true ;;
+    --install-schedule) INSTALL_SCHEDULE=true ;;
+    -h|--help) usage; exit 0 ;;
+    *) printf 'Unknown option: %s\n' "$1" >&2; usage >&2; exit 2 ;;
+  esac
+  shift
+done
+
+install_schedule() {
+  if [[ "$(uname -s)" != "Darwin" ]]; then
+    printf '%s\n' '--install-schedule is only available on macOS.' >&2
+    exit 1
+  fi
+
+  local label='com.joonheeu.dotfiles-prune'
+  local plist="$HOME/Library/LaunchAgents/$label.plist"
+  local script="$HOME/scripts/system/dotfiles-prune"
+
+  mkdir -p "$HOME/Library/LaunchAgents" "$HOME/Library/Logs"
+  cat > "$plist" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>$label</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>$script</string>
+    <string>--apply</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Day</key><integer>1</integer>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>20</integer>
+  </dict>
+  <key>StandardOutPath</key>
+  <string>$HOME/Library/Logs/dotfiles-prune.log</string>
+  <key>StandardErrorPath</key>
+  <string>$HOME/Library/Logs/dotfiles-prune.log</string>
+</dict>
+</plist>
+EOF
+
+  launchctl bootout "gui/$(id -u)" "$plist" 2>/dev/null || true
+  launchctl bootstrap "gui/$(id -u)" "$plist"
+  printf 'installed monthly schedule: %s\n' "$plist"
+}
+
+if "$INSTALL_SCHEDULE"; then
+  install_schedule
+  exit 0
+fi
+
+action() {
+  local path="$1"
+  if "$APPLY"; then
+    rm -f -- "$path"
+    printf 'removed  %s\n' "$path"
+  else
+    printf 'would remove  %s\n' "$path"
+  fi
+}
+
+prune_old_files() {
+  local directory="$1"
+  local name="$2"
+  local days="$3"
+
+  while IFS= read -r -d '' path; do
+    action "$path"
+  done < <(find "$directory" -maxdepth 1 -type f -name "$name" -mtime "+$days" -print0)
+}
+
+prune_backup_count() {
+  local paths=()
+  local path
+
+  while IFS= read -r path; do
+    paths+=("$path")
+  done < <(
+    while IFS= read -r -d '' path; do
+      printf '%s\t%s\n' "$(stat -f '%m' "$path")" "$path"
+    done < <(find "$HOME" -maxdepth 1 -type f -name '.*.bak.*' -print0) | sort -rn | cut -f2-
+  )
+
+  local index=0
+  for path in "${paths[@]}"; do
+    index=$((index + 1))
+    if (( index > BACKUP_KEEP )); then
+      action "$path"
+    fi
+  done
+}
+
+prune_ds_store() {
+  local root="$1"
+  if [[ ! -d "$root" ]]; then
+    return
+  fi
+
+  while IFS= read -r -d '' path; do
+    action "$path"
+  done < <(find "$root" -path "$root/.git" -prune -o -type f -name '.DS_Store' -mtime +7 -print0)
+}
+
+prune_zcompdump_locks() {
+  local path
+  while IFS= read -r -d '' path; do
+    if "$APPLY"; then
+      if rmdir "$path" 2>/dev/null; then
+        printf 'removed  %s\n' "$path"
+      else
+        printf 'kept non-empty lock directory  %s\n' "$path"
+      fi
+    else
+      printf 'would remove if empty  %s\n' "$path"
+    fi
+  done < <(find "$HOME" -maxdepth 1 -type d -name '.zcompdump*.lock' -mtime +1 -print0)
+}
+
+printf '%s run\n' "$([[ "$APPLY" == true ]] && printf 'Apply' || printf 'Dry')"
+printf 'Backups: older than %s days; retain newest %s\n' "$BACKUP_DAYS" "$BACKUP_KEEP"
+prune_old_files "$HOME" '.*.bak.*' "$BACKUP_DAYS"
+prune_backup_count
+
+printf 'zcompdump: older than %s days\n' "$ZCOMPDUMP_DAYS"
+prune_old_files "$HOME" '.zcompdump*' "$ZCOMPDUMP_DAYS"
+prune_zcompdump_locks
+
+printf '.DS_Store: stale files under %s\n' "$HOME/.dotfiles"
+prune_ds_store "$HOME/.dotfiles"
+
+if "$HOME_DS_STORE"; then
+  printf '.DS_Store: stale files under home (excluding Library, .Trash, .ssh)\n'
+  while IFS= read -r -d '' path; do
+    action "$path"
+  done < <(find "$HOME" \
+    -path "$HOME/Library" -prune -o \
+    -path "$HOME/.Trash" -prune -o \
+    -path "$HOME/.ssh" -prune -o \
+    -type f -name '.DS_Store' -mtime +7 -print0)
+fi

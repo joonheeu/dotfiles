@@ -2,16 +2,24 @@
 
 Personal development environment configuration, managed with [GNU Stow](https://www.gnu.org/software/stow/).
 
+Automation policy, inventory, and follow-up checks are documented in
+[`AUTOMATIONS.md`](AUTOMATIONS.md). Run `~/scripts/system/home-automation-status`
+after installing or changing the home environment.
+
 ## Contents
 
 | Package | Files | Description |
 |---------|-------|-------------|
-| `zsh` | `.zshrc` | Shell config — Oh My Zsh, Zinit plugins, aliases, functions |
+| `zsh` | `.zshrc`, `.zprofile`, `.zsh-environment.md` | zsh shell — OMZ git, Zinit suggestions/highlighting, Starship |
+| `home` | `AGENTS.md` | Home-folder routing instructions for agents and automation work |
 | `git` | `.gitconfig` | Git user settings, LFS, HTTP buffer |
+| | `.gitconfig.delta` | Portable Delta pager and interactive diff settings |
+| | `.gitconfig.local.example` | Optional local GitHub CLI credential-helper template (not a secret) |
 | `config` | `.config/starship.toml` | Starship prompt theme |
 | | `.config/ghostty/config` | Ghostty terminal (Dracula theme, JetBrains Mono) |
 | | `.config/mise/config.toml` | mise runtime versions (Node, Python, Bun, etc.) |
-| `scripts` | `scripts/claude/` | Claude Code helper scripts (master agent, vibe-coder) |
+| `scripts` | `scripts/ai/` | AI CLI utilities (`codex-imagegen`) |
+| | `scripts/claude/` | Claude Code helper scripts (master agent, vibe-coder) |
 | | `scripts/dev/` | Editor extension cleaner |
 | | `scripts/mac/` | macOS storage cleanup, dictation fix |
 | | `scripts/security/` | Keychain-based secret manager, password generator |
@@ -34,6 +42,8 @@ The script will:
 ```
 ~/.dotfiles/
 ├── zsh/
+│   ├── .zsh-environment.md
+│   ├── .zprofile
 │   └── .zshrc
 ├── git/
 │   └── .gitconfig
@@ -77,6 +87,33 @@ cd ~/.dotfiles
 git add -p
 git commit -m "chore(zsh): update aliases"
 git push
+```
+
+## Maintenance
+
+`dotfiles-prune` removes only regenerable dotfiles artifacts. It is a dry run
+by default; review the output, then apply it explicitly.
+
+```bash
+dotfiles-prune
+dotfiles-prune --apply
+```
+
+To run the safe default cleanup automatically at 03:20 on the first day of
+each month, register its macOS LaunchAgent once:
+
+```bash
+dotfiles-prune --install-schedule
+```
+
+It deletes root-level `.*.bak.*` files older than 30 days (and keeps at most
+the newest five), `~/.zcompdump*` files older than seven days (including empty
+stale lock directories), and stale
+`.DS_Store` files inside this repository. Finder creates `.DS_Store` files to
+remember each folder's view preferences, so home-wide cleanup is opt-in:
+
+```bash
+dotfiles-prune --home-ds-store --apply
 ```
 
 ## Requirements
